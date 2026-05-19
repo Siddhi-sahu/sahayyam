@@ -8,6 +8,14 @@ import { useAuthStore } from "./lib/auth-store";
 import type { Tip, Urgency } from "./types";
 import { Button, Card, Field, GhostButton, Input, Pill, Select, Textarea } from "./components/ui";
 
+const categories = ["SCHOLARSHIP", "FACULTY", "PLACEMENT", "CLUB", "DEPARTMENT_NORM", "ACADEMIC", "OTHER"] as const;
+const urgencies = ["LOW", "MEDIUM", "HIGH", "CRITICAL"] as const;
+
+function normalizeChoice(value: string, allowed: readonly string[], fallback: string) {
+  const normalized = value.trim().toUpperCase().replace(/[\s-]+/g, "_");
+  return allowed.includes(normalized) ? normalized : fallback;
+}
+
 function urgencyTone(urgency: Urgency) {
   if (urgency === "CRITICAL") return "red";
   if (urgency === "HIGH") return "amber";
@@ -284,8 +292,8 @@ function SubmitTipPanel() {
   const enrich = useMutation({
     mutationFn: () => api.enrichTip({ title, rawText: body }),
     onSuccess: (data) => {
-      setCategory(data.category);
-      setUrgency(data.urgency);
+      setCategory(normalizeChoice(data.category, categories, "OTHER"));
+      setUrgency(normalizeChoice(data.urgency, urgencies, "MEDIUM"));
       setActionSteps(data.actionSteps.join("\n"));
       if (data.deadline) setDeadline(data.deadline.slice(0, 10));
     },
@@ -296,8 +304,8 @@ function SubmitTipPanel() {
       api.createTip({
         title,
         body,
-        category,
-        urgency,
+        category: normalizeChoice(category, categories, "OTHER"),
+        urgency: normalizeChoice(urgency, urgencies, "MEDIUM"),
         deadline: deadline || undefined,
         actionSteps: actionSteps.split("\n").map((step) => step.trim()).filter(Boolean),
         evidenceQuality: "DIRECT_EXPERIENCE",
@@ -337,12 +345,12 @@ function SubmitTipPanel() {
         <div className="grid gap-4 md:grid-cols-3">
           <Field label="Category">
             <Select value={category} onChange={(event) => setCategory(event.target.value)}>
-              {["SCHOLARSHIP", "FACULTY", "PLACEMENT", "CLUB", "DEPARTMENT_NORM", "ACADEMIC", "OTHER"].map((value) => <option key={value}>{value}</option>)}
+              {categories.map((value) => <option key={value}>{value}</option>)}
             </Select>
           </Field>
           <Field label="Urgency">
             <Select value={urgency} onChange={(event) => setUrgency(event.target.value)}>
-              {["LOW", "MEDIUM", "HIGH", "CRITICAL"].map((value) => <option key={value}>{value}</option>)}
+              {urgencies.map((value) => <option key={value}>{value}</option>)}
             </Select>
           </Field>
           <Field label="Deadline"><Input type="date" value={deadline} onChange={(event) => setDeadline(event.target.value)} /></Field>

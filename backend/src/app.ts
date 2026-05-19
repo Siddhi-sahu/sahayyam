@@ -10,11 +10,13 @@ export const app = express();
 
 app.use(helmet());
 app.use(
-    cors({
+        cors({
         origin(origin, callback) {
-        const configuredOrigins = env.CORS_ORIGIN.split(",").map((item) => item.trim());
+        const normalizeOrigin = (value: string) => value.trim().replace(/\/$/, "");
+        const configuredOrigins = env.CORS_ORIGIN.split(",").map(normalizeOrigin);
         const localDevOrigins = ["http://localhost:5173", "http://127.0.0.1:5173"];
-        if (!origin || configuredOrigins.includes(origin) || localDevOrigins.includes(origin)) {
+        const requestOrigin = origin ? normalizeOrigin(origin) : null;
+        if (!requestOrigin || configuredOrigins.includes(requestOrigin) || localDevOrigins.includes(requestOrigin)) {
             callback(null, true);
             return;
         }

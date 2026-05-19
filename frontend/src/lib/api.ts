@@ -21,7 +21,8 @@ async function apiRequest<T>(path: string, options: ApiOptions = {}): Promise<T>
   const text = await response.text();
   const data = text ? JSON.parse(text) : null;
   if (!response.ok) {
-    throw new Error(data?.message ?? "Request failed");
+    const details = data?.issues?.length ? `: ${data.issues.map((issue: { path?: string[]; message: string }) => `${issue.path?.join(".") || "field"} ${issue.message}`).join(", ")}` : "";
+    throw new Error(`${data?.message ?? "Request failed"}${details}`);
   }
   return data as T;
 }
