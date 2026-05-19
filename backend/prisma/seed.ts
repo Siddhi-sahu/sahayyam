@@ -89,9 +89,9 @@ async function main() {
   const passwordHash = await passwordHashPromise;
 
   const college = await prisma.college.upsert({
-    where: { name: "Sahayyam Institute of Technology" },
+    where: { name: "sāhāyyam Institute of Technology" },
     update: {},
-    create: { name: "Sahayyam Institute of Technology", domain: "sahayyam.edu" },
+    create: { name: "sāhāyyam Institute of Technology", domain: "sahayyam.edu" },
   });
 
   const branches = await Promise.all(

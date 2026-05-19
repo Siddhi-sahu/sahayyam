@@ -3,7 +3,7 @@ import { app } from "./app";
 import { prisma } from "./lib/prisma";
 
 const server = app.listen(env.PORT, () => {
-  console.log(`Sahayyam API listening on http://localhost:${env.PORT}`);
+  console.log(`sāhāyyam API listening on http://localhost:${env.PORT}`);
 });
 
 async function shutdown(signal: string) {

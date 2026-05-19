@@ -11,10 +11,18 @@ export const app = express();
 app.use(helmet());
 app.use(
     cors({
-        origin: env.CORS_ORIGIN,
+        origin(origin, callback) {
+        const configuredOrigins = env.CORS_ORIGIN.split(",").map((item) => item.trim());
+        const localDevOrigins = ["http://localhost:5173", "http://127.0.0.1:5173"];
+        if (!origin || configuredOrigins.includes(origin) || localDevOrigins.includes(origin)) {
+            callback(null, true);
+            return;
+        }
+        callback(null, false);
+        },
         credentials: true,
     }),
-    );
+);
 app.use(express.json({ limit: "1mb" }));
 app.use(morgan(env.NODE_ENV === "production" ? "combined" : "dev"));
 

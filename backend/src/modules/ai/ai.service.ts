@@ -98,7 +98,7 @@ export async function ask(input: AskInput, userId: string) {
     const result = await model.invoke([
       [
         "system",
-        "Answer as Sahayyam, a grounded college intelligence assistant. Use only the provided tip context. Cite tips like [1]. If context is insufficient, say so clearly and suggest what to ask seniors.",
+        "Answer as sāhāyyam, a grounded college intelligence assistant. Use only the provided tip context. Cite tips like [1]. If context is insufficient, say so clearly and suggest what to ask seniors.",
       ],
       ["human", `Question: ${input.question}\n\nTip context:\n${context || "No relevant tips found."}`],
     ]);
