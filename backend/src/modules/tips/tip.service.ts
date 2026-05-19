@@ -21,8 +21,8 @@ function parseDeadline(value?: string) {
 }
 
 export function scoreTipForUser(tip: TipWithRelations, user: { collegeId: string | null; branchId: string | null; isFirstGen: boolean }) {
-  const verificationCount = tip.verifications.filter((v) => v.type === "VERIFY").length;
-  const disputeCount = tip.verifications.filter((v) => v.type === "DISPUTE").length;
+  const verificationCount = tip.verifications.filter((v: any) => v.type === "VERIFY").length;
+  const disputeCount = tip.verifications.filter((v: any) => v.type === "DISPUTE").length;
   return calculateSignalRank({
     urgency: tip.urgency,
     status: tip.status,
