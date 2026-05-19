@@ -1,5 +1,6 @@
 import bcrypt from "bcryptjs";
-import { PrismaClient, type EvidenceQuality, type TipCategory, type Urgency } from "@prisma/client";
+import { PrismaClient } from "@prisma/client";
+import type { EvidenceQuality, TipCategory, Urgency } from "../src/modules/types";
 
 const prisma = new PrismaClient();
 

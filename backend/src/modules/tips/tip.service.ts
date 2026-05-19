@@ -1,10 +1,10 @@
-import type { Prisma, Tip } from "@prisma/client";
 import { AppError } from "../../lib/http";
 import { prisma } from "../../lib/prisma";
 import { enrichTip } from "../ai/ai.service";
 import { saveTipEmbedding } from "../ai/embedding.service";
 import { searchTipIds } from "../search/search.service";
 import { calculateSignalRank, inferUrgency } from "../signal-rank/signalRank.service";
+import type { EvidenceQuality, TipCategory, TipStatus, Urgency, UserRole, VerificationType } from "../types";
 import type { CreateTipInput, FeedQuery } from "./tip.schemas";
 
 const tipInclude = {
@@ -12,17 +12,91 @@ const tipInclude = {
   college: true,
   branch: true,
   verifications: true,
-} satisfies Prisma.TipInclude;
+} as const;
 
-type TipWithRelations = Prisma.TipGetPayload<{ include: typeof tipInclude }>;
+type TipWithRelations = {
+  id: string;
+  title: string;
+  body: string;
+  summary: string | null;
+  actionSteps: string[];
+  audience: string | null;
+  category: TipCategory;
+  urgency: Urgency;
+  status: TipStatus;
+  evidenceQuality: EvidenceQuality;
+  sourceConfidence: number;
+  deadline: Date | null;
+  signalRank: number;
+  authorId: string;
+  collegeId: string;
+  branchId: string | null;
+  createdAt: Date;
+  updatedAt: Date;
+  author: {
+    id: string;
+    name: string;
+    role: UserRole;
+    credibilityScore: number;
+  };
+  college: {
+    id: string;
+    name: string;
+    domain: string | null;
+    createdAt: Date;
+    updatedAt: Date;
+  };
+  branch: {
+    id: string;
+    name: string;
+    code: string;
+    collegeId: string;
+    createdAt: Date;
+    updatedAt: Date;
+  } | null;
+  verifications: Array<{
+    id: string;
+    tipId: string;
+    userId: string;
+    type: VerificationType;
+    note: string | null;
+    createdAt: Date;
+    updatedAt: Date;
+  }>;
+};
+
+type TipCreateData = {
+  title: string;
+  body: string;
+  summary?: string | null;
+  actionSteps: string[];
+  audience?: string | null;
+  category: TipCategory;
+  urgency: Urgency;
+  evidenceQuality: EvidenceQuality;
+  sourceConfidence: number;
+  deadline: Date | null;
+  authorId: string;
+  collegeId: string;
+  branchId: string | null;
+};
+
+type TipWhereInput = {
+  status?: TipStatus | { not: TipStatus } | { in: TipStatus[] };
+  collegeId?: string;
+  category?: TipCategory;
+  urgency?: Urgency;
+  id?: { in: string[] };
+  OR?: Array<{ branchId?: string | null }>;
+};
 
 function parseDeadline(value?: string) {
   return value ? new Date(value) : null;
 }
 
 export function scoreTipForUser(tip: TipWithRelations, user: { collegeId: string | null; branchId: string | null; isFirstGen: boolean }) {
-  const verificationCount = tip.verifications.filter((v: any) => v.type === "VERIFY").length;
-  const disputeCount = tip.verifications.filter((v: any) => v.type === "DISPUTE").length;
+  const verificationCount = tip.verifications.filter((v) => v.type === "VERIFY").length;
+  const disputeCount = tip.verifications.filter((v) => v.type === "DISPUTE").length;
   return calculateSignalRank({
     urgency: tip.urgency,
     status: tip.status,
@@ -52,7 +126,7 @@ export async function createTip(input: CreateTipInput, authorId: string) {
   }
 
   const deadline = parseDeadline(input.deadline ?? enriched.deadline ?? undefined);
-  const data = {
+  const data: TipCreateData = {
     title: input.title,
     body: input.body,
     summary: input.summary ?? enriched.summary,
@@ -66,7 +140,7 @@ export async function createTip(input: CreateTipInput, authorId: string) {
     authorId,
     collegeId: author.collegeId,
     branchId: input.branchId ?? author.branchId,
-  } satisfies Prisma.TipUncheckedCreateInput;
+  };
 
   const tip = await prisma.tip.create({ data, include: tipInclude });
   const signalRank = scoreTipForUser(tip, {
@@ -95,7 +169,7 @@ export async function getFeed(query: FeedQuery, userId: string) {
   const user = await prisma.user.findUniqueOrThrow({ where: { id: userId } });
   const searchedIds = query.q ? await searchTipIds(query.q, { collegeId: user.collegeId, branchId: user.branchId }, 30) : null;
 
-  const where: Prisma.TipWhereInput = {
+  const where: TipWhereInput = {
     status: query.status ?? { not: "ARCHIVED" },
     collegeId: user.collegeId ?? undefined,
     category: query.category,
@@ -126,4 +200,4 @@ export async function refreshTipRank(tipId: string) {
   return prisma.tip.update({ where: { id: tipId }, data: { signalRank }, include: tipInclude });
 }
 
-export type { Tip, TipWithRelations };
+export type { TipWithRelations };

@@ -1,6 +1,6 @@
-import type { VerificationType } from "@prisma/client";
 import { AppError } from "../../lib/http";
 import { prisma } from "../../lib/prisma";
+import type { VerificationType } from "../types";
 import { refreshTipRank } from "../tips/tip.service";
 import type { VerificationInput } from "./verification.schemas";
 

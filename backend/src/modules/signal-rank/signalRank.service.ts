@@ -1,4 +1,4 @@
-import type { EvidenceQuality, TipStatus, Urgency } from "@prisma/client";
+import type { EvidenceQuality, TipStatus, Urgency } from "../types";
 
 type RankInput = {
   urgency: Urgency;

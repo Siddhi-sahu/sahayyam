@@ -26,7 +26,9 @@ export async function searchTipIds(query: string, scope: SearchScope, limit = 10
       vectorToSql(embedding),
       limit,
     );
-    return rows.map((row) => row.id);
+    if (rows.length > 0) {
+      return rows.map((row) => row.id);
+    }
   }
 
   const tips = await prisma.tip.findMany({
